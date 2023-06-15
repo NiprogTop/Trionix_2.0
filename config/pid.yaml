@@ -1,0 +1,16 @@
+pitch_pid:
+  kp: 0.0
+  ki: 0.0
+  kd: 0.0
+  max_effort: 0.4
+  angular: True
+  inverted: False
+
+depth_pid:
+  kp: 0.6
+  ki: 0.01
+  kd: 0.0
+  max_effort: 0.4
+  angular: False
+  inverted: False
+

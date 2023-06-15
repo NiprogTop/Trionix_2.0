@@ -33,6 +33,7 @@ class Board:
         rospy.Subscriber('thrusters_3', Float64, self.thrusters_callback, 3)
         
         rospy.Subscriber('light', Float64, self.led_callback)
+
         rospy.loginfo('Cpu Board started')
 
     def __del__(self):
@@ -43,11 +44,14 @@ class Board:
 
     def read_data(self):
         resp = self.ser.readline()
-        rospy.loginfo(resp)
+        # rospy.loginfo(resp)
         try:
             resp = resp.decode('UTF-8')
             data = resp[3:-2].split(' ')
-            p, r, depth, temp = data
+            # rospy.loginfo("Get" + str(data))
+            # r = data[0]
+            p = data[1]
+            depth = data[3]
             self.pitch_publisher_.publish(float(p))
             self.depth_publisher_.publish(float(depth))
         except Exception:
@@ -55,15 +59,18 @@ class Board:
     
 
     def send_cmd(self, _):
-        cmd = str('$3' + ' ' + str(self.thrusters[0]) + ' ' + str(self.thrusters[1]) + ' ' + str(self.thrusters[2]) + ' ' + str(self.thrusters[3]) + ' '  + str(self.led) + ' ' + ';').encode('utf-8')
+        cmd = f'$3 {self.thrusters[0]} {self.thrusters[1]} {self.thrusters[2]} {self.thrusters[3]} {self.led};'.encode('utf-8')
+        #cmd = str('$3' + ' ' + str(self.thrusters[0]) + ' ' + str(self.thrusters[1]) + ' ' + str(self.thrusters[2]) + ' ' + str(self.thrusters[3]) + ' '  + str(self.led) + ' ' + ';').encode('utf-8')
         self.ser.write(cmd)
-        #rospy.loginfo(cmd)
+        # rospy.loginfo("Send:" + str(cmd))
 
     def thrusters_callback(self, msg, i):
         self.thrusters[i] = int(min(max(msg.data * 100, -100), 100))
 
     def led_callback(self, msg):
-        self.led = int(min(max(msg.data * 255, 0), 255))
+        # self.led = int(min(max(msg.data * 255, 0), 255))
+        self.led = int(msg.data)
+
 
 
 if __name__ == '__main__':

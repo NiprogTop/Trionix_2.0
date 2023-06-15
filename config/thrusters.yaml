@@ -1,0 +1,22 @@
+thrusters:
+  'left':
+    f: [ 1.00, 0.00, 0.00]
+    r: [0.00, 0.20, 0.00]
+    k_forward:  1.0
+    k_backward: 1.0
+  'right':
+    f: [ 1.00, 0.00, 0.00]
+    r: [0.00, -0.20, 0.00]
+    k_forward:  -1.0
+    k_backward: -1.0
+  'front':
+    f: [ 0.00, 0.00, 1.00]
+    r: [ 0.25, 0.00, 0.00]
+    k_forward:  -1.0
+    k_backward: -1.0
+  'back':
+    f: [ 0.00, 0.00, 1.00]
+    r: [ -0.25, 0.00, 0.00]
+    k_forward:  1.0
+    k_backward: 1.0
+    

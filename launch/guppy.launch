@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="pid" default="false" />
+  <arg name="aruco" default="false" />
+  <arg name="type" default="pid" />
+
+  	<machine name="guppy" address="192.168.166.71" user="coder" timeout="10" password="coder" env-loader="~/trionix_ws/env.sh" />
+  	
+	<node machine="guppy" pkg="ocam_driver" type="ocam_driver_node" name="camera" output="screen">
+    	   <param name="device"  value="/dev/video1"/>
+           <param name="trigger" value="false"/>
+ 	   <param name="format" value="Motion-JPEG 320 x 240 30 fps"/>
+  	</node>
+  	
+	<!-- <node machine="guppy" pkg="pwm_pca9685" type="pca9685_node" name="pwm" output="screen">
+  	  <remap from="command" to="pwm"/>
+
+  	  <param name="device" value="/dev/i2c-0"/>
+  	  <param name="frequency" value="333"/>
+ 	 </node>
+        -->
+
+  	<!-- <node machine="guppy" pkg="librobotcontrol" type="librobotcontrol_node" name="imu" output="screen">
+        	<param name="use_imu" value="true" />
+	        <param name="use_pwm" value="false" />
+	
+		<param name="use_adc" value="false" />
+		<param name="magnetometer" value="false"/>
+		<param name="use_imu" value="true"/>
+	    	<param name="i2c_bus" value="0"/>
+	    	<param name="dmp" value="true"/>
+	    	<param name="gpio_int_pin_chip" value="0"/>
+	    	<param name="gpio_int_pin" value="6"/>
+	</node> -->
+
+	<!-- <node machine="guppy" pkg="librobotcontrol" type="pressure.py" name="pressure" output="screen" /> -->
+
+  <node machine="guppy" pkg="trionix_new" type="guppy_hat.py" name="hat" output="screen">
+    <remap from="/thrusters/3" to="/thrusters/back_right"/>
+    <remap from="/thrusters/0" to="/thrusters/front_horizontal"/>
+    <remap from="/thrusters/2" to="/thrusters/front_vertical"/>
+    <remap from="/thrusters/1" to="/thrusters/back_left"/>
+    <remap from="/thrusters/5" to="/thrusters/back_horizontal"/>
+    <remap from="/thrusters/4" to="/thrusters/back_vertical"/>
+  </node>
+
+  <node name="thrusters_controller" pkg="thrusters_controllers" type="thrusters_controller_node" output="screen">
+    <rosparam command="load" file="$(find trionix)/config/guppy_thrusters.yaml" />
+  </node>
+
+	<node name="joy" pkg="joy" type="joy_node" />
+
+  <node name="teleop" pkg="smtusdb_teleop_tools" type="akara_simple_teleop.py" if="$(eval arg('type') == 'simple')"/>
+  <node name="teleop" pkg="smtusdb_teleop_tools" type="trionix_joy_teleop.py" if="$(eval arg('type') == 'pid')" />
+
+	<node name = "my_rqt_dashboard"
+	 	pkg = "rqt_gui" 
+	 	type = "rqt_gui" 
+	 	respawn = "false" 
+	 	output = "screen" 
+	 	args = "--perspective-file $(find trionix)/perspective/GuppyRobotTest.perspective"/> 
+
+
+  <node name="pid" machine="guppy" pkg="pid_regulator" type="guppy_pid.py" output="screen">
+  <rosparam command="load" file="$(find trionix)/config/pid.yaml" />
+  </node>
+  
+  <node name="observer" machine="guppy" pkg="pid_regulator" type="akara_observer.py" output="screen"/>
+  
+  <!--<node pkg="tf2_ros" type="static_transform_publisher" name="base_link_to_imu_broadcaster"
+        args="0 0 0 1.57 -1.57 0.07 /base_link /imu_link" />
+ -->
+  <group if="$(arg pid)">
+    <node name="pid" pkg="pid_regulator" type="guppy_pid.py" output="screen">
+      <rosparam command="load" file="$(find guppy)/config/pid.yaml" />
+    </node>
+  </group> 
+  
+  
+</launch>
+

@@ -1,0 +1,29 @@
+!!python/object/new:dynamic_reconfigure.encoding.Config
+dictitems:
+  angular: true
+  groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+    dictitems:
+      angular: true
+      groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+        state: []
+      id: 0
+      inverted: false
+      kd: 0.0
+      ki: 0.0
+      kp: 18.0
+      max_effort: 0.0
+      name: Default
+      parameters: !!python/object/new:dynamic_reconfigure.encoding.Config
+        state: []
+      parent: 0
+      state: true
+      timeout: 1
+      type: ''
+    state: []
+  inverted: false
+  kd: 0.0
+  ki: 0.0
+  kp: 18.0
+  max_effort: 0.0
+  timeout: 1
+state: []

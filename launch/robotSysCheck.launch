@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<launch>
+	<!-- <machine name="trion" address="192.168.1.100" user="admin" timeout="10" password="admin" env-loader="~/trionix/env.sh" /> -->
+	
+	
+	
+
+	
+	<node name="thrusters_controller" pkg="thrusters_controllers" type="thrusters_controller_node" output="screen" respawn="true">
+    		<rosparam command="load" file="$(find trionix)/config/thrusters.yaml" />
+  	</node>
+
+	<node name="joy" pkg="joy" type = "joy_node"/>
+	
+	<node name="pid" pkg="pid_regulator" type="guppy_pid.py" output="screen">
+           <rosparam command="load" file="$(find trionix)/config/pid.yaml" />
+        </node>
+	
+	 
+         
+	<node name="teleop" pkg="smtusdb_teleop_tools" type = "trionix_joy_teleop.py" output="screen" />
+	
+	<node pkg="trionix_new" type="test_hat2.py" name="hat" respawn="true" output="screen">
+  	   <remap from="/thrusters_3" to="/thrusters/front"/>
+ 	   <remap from="/thrusters_0" to="/thrusters/right"/>
+ 	   <remap from="/thrusters_1" to="/thrusters/left"/>
+ 	   <remap from="/thrusters_2" to="/thrusters/back"/>
+ 	 </node>
+<!-- 	<node machine="trion" pkg="usb_cam" type="usb_cam_node" name="cam_1">
+		<param name="video_device" type="string" value="/dev/video0" />
+	</node> 
+	
+	<node pkg="trionix_new" type="test_hat.py" name="hat" respawn="true">
+  	   <remap from="/thrusters_3" to="/thrusters/front"/>
+ 	   <remap from="/thrusters_0" to="/thrusters/right"/>
+ 	   <remap from="/thrusters_1" to="/thrusters/left"/>
+ 	   <remap from="/thrusters_2" to="/thrusters/back"/>
+ 	 </node>
+	
+  	 <node name="pid" pkg="pid_regulator" type="guppy_pid.py" output="screen">
+           <rosparam command="load" file="$(find trionix)/config/pid.yaml" />
+         </node> 
+         
+    
+ 	 
+	 
+-->
+</launch>
