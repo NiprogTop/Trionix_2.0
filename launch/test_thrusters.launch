@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- <node pkg="trionix_new" type="guppy_hat.py" name="hat" respawn="true" output="screen">
+           <remap from="/thrusters_3" to="/thrusters/back_right"/>
+           <remap from="/thrusters_1" to="/thrusters/front_horizontal"/>
+           <remap from="/thrusters_2" to="/thrusters/front_vertical"/>
+           <remap from="/thrusters_0" to="/thrusters/back_left"/>
+           <remap from="/thrusters_5" to="/thrusters/back_horizontal"/>
+           <remap from="/thrusters_4" to="/thrusters/back_vertical"/>
+        </node> -->
+
+    <node name="thrusters_controller" pkg="trionix_new" type="thrusters_config_node" output="screen" respawn="true">
+        <rosparam command="load" file="$(find trionix_new)/config/guppy_thrusters.yaml" />
+    </node>
+
+
+</launch>

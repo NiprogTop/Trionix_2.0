@@ -3,6 +3,7 @@ import serial
 
 import rospy
 from std_msgs.msg import Float64
+from std_msgs.msg import Int16
 
 
 class Board:
@@ -21,8 +22,9 @@ class Board:
     temp = 0.0
     thrusters = [0, 0, 0, 0, 0, 0]
 
+
     def __init__(self):
-        self.ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=0.03)
+        self.ser = serial.Serial('/dev/ttyS1', 115200, timeout=0.03)
         self.depth_publisher_ = rospy.Publisher('/depth', Float64, queue_size=1)
         self.pitch_publisher_ = rospy.Publisher('/pitch', Float64, queue_size=1)
 
@@ -33,8 +35,10 @@ class Board:
         rospy.Subscriber('thrusters_3', Float64, self.thrusters_callback, 3)
         rospy.Subscriber('thrusters_4', Float64, self.thrusters_callback, 4)
         rospy.Subscriber('thrusters_5', Float64, self.thrusters_callback, 5)
+        rospy.Subscriber('thrusters_update', Int16, self.update_thrusters_id)
 
         rospy.loginfo('Cpu Board started')
+
 
     def __del__(self):
         self.ser.write('$3 0 0 0 0 0 0;'.encode('utf_8'))
@@ -44,11 +48,12 @@ class Board:
 
     def read_data(self):
         resp = self.ser.readline()
-        rospy.loginfo(resp)
+        # rospy.loginfo(resp)
         try:
             resp = resp.decode('UTF-8')
             data = resp[3:-2].split(' ')
-            p, r, depth, temp = data
+            p = data[1]
+            depth = data[3]
             self.pitch_publisher_.publish(float(p))
             self.depth_publisher_.publish(float(depth))
         except Exception:
@@ -60,8 +65,13 @@ class Board:
         self.ser.write(cmd)
         #rospy.loginfo(cmd)
 
+
     def thrusters_callback(self, msg, i):
         self.thrusters[i] = int(min(max(msg.data * 100, -100), 100))
+
+    
+    def update_thrusters_id(self,i):
+        pass
 
 
 

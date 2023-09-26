@@ -1,0 +1,38 @@
+thrusters:
+  'back_left':
+    f: [ 1.00, 0.00, 0.00]
+    r: [-0.38, 0.00, 0.00]
+    k_forward:  1.0
+    k_backward: 1.0
+    thruster_number: 1
+  'back_right':
+    f: [ 1.00, 0.00, 0.00]
+    r: [-0.38, 0.00, 0.00]
+    k_forward:  -1.0
+    k_backward: -1.0
+    thruster_number: 2
+  'front_vertical':
+    f: [ 0.00, 0.00, 1.00]
+    r: [ 0.23, 0.00, 0.00]
+    k_forward:  -1.0
+    k_backward: -1.0
+    thruster_number: 3
+  'front_horizontal':
+    f: [ 0.00, 1.00, 0.00]
+    r: [ 0.27, 0.00, 0.00]
+    k_forward:  1.0
+    k_backward: 1.0
+    thruster_number: 4
+  'back_vertical':
+    f: [ 0.00, 0.00, 1.00]
+    r: [-0.14, 0.00, 0.00]
+    k_forward:  1.0
+    k_backward: 1.0
+    thruster_number: 5
+  'back_horizontal':
+    f: [ 0.00, 1.00, 0.00]
+    r: [-0.25, 0.00, 0.00]
+    k_forward:  1.0
+    k_backward: 1.0
+    thruster_number: 6
+
