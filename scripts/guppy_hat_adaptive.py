@@ -12,7 +12,7 @@ import os
 
 class Board:
     # CONFIG_FILE_PATH = '/home/nick/trionix/src/trionix_new/config/thrusters2.yaml'
-    CONFIG_FILE_PATH = '/home/coder/trionix_ws/src/trionix_new/config/thrusters.yaml'
+    CONFIG_FILE_PATH = '/home/coder/trionix_ws/src/trionix_new/config/guppy_thrusters.yaml'
     # SERIAL_PORT = "/dev/ttyUSB0"
     SERIAL_PORT = '/dev/ttyS1'
 
@@ -21,7 +21,7 @@ class Board:
     led = 0.0
     depth = 0.0
     temp = 0.0
-    thrusters = [0, 0, 0, 0]
+    thrusters = [0, 0, 0, 0, 0, 0]
     thrusters_num = {}
     thr_list = ""
 
@@ -39,18 +39,20 @@ class Board:
         rospy.Subscriber('thrusters_1', Float64, self.thrusters_callback, 1)
         rospy.Subscriber('thrusters_2', Float64, self.thrusters_callback, 2)
         rospy.Subscriber('thrusters_3', Float64, self.thrusters_callback, 3)
+        rospy.Subscriber('thrusters_4', Float64, self.thrusters_callback, 4)
+        rospy.Subscriber('thrusters_5', Float64, self.thrusters_callback, 5)
         rospy.Subscriber('thrusters_update', Int16, self.update_thrusters_config_data)
         rospy.Subscriber('thrusters_data_pub', Int16, self.pub_thrusters_config_data)
         rospy.Subscriber('thrusters_save', String, self.save_thrusters_config_data)
-        
-        rospy.Subscriber('light', Float64, self.led_callback)
+
+        # rospy.Subscriber('light', Float64, self.led_callback)
         # print('Get current working directory : ', os.getcwd())
 
         rospy.loginfo('Cpu Board started')
         
 
     def __del__(self):
-        self.ser.write('$3 0 0 0 0 0;'.encode('utf_8'))
+        self.ser.write('$3 0 0 0 0 0 0;'.encode('utf_8'))
         if self.ser:
             self.ser.close()
 
@@ -72,12 +74,13 @@ class Board:
         self.thr_list = self.thr_list.rstrip(self.thr_list[-1])
         if self.CONFIG_DATA == 0:
             self.CONFIG_DATA = self.thrusters_num.copy()
+            rospy.loginfo(self.CONFIG_DATA)
         file.close()
 
 
     def pub_thrusters_config_data(self, msg):
         # rospy.loginfo(self.CONFIG_DATA)
-        # rospy.loginfo(self.thrusters_num)
+        rospy.loginfo(self.thrusters_num)
         self.thr_list_publisher_.publish(str(json.dumps(self.thrusters_num)))
 
 
@@ -124,11 +127,21 @@ class Board:
 
     def send_cmd(self, _):
         try:
-            thr_1 = int(self.thrusters[self.thrusters_num["front"]["thruster_number"]]) * self.invert_k(self.thrusters_num["front"]["k_forward"], self.CONFIG_DATA["front"]["k_forward"]) 
-            thr_2 = int(self.thrusters[self.thrusters_num["back"]["thruster_number"]]) * self.invert_k(self.thrusters_num["back"]["k_forward"], self.CONFIG_DATA["back"]["k_forward"]) 
-            thr_3 = int(self.thrusters[self.thrusters_num["left"]["thruster_number"]]) * self.invert_k(self.thrusters_num["left"]["k_forward"], self.CONFIG_DATA["left"]["k_forward"])
-            thr_4 = int(self.thrusters[self.thrusters_num["right"]["thruster_number"]]) * self.invert_k(self.thrusters_num["right"]["k_forward"], self.CONFIG_DATA["right"]["k_forward"] )
-            cmd = f'$3 {thr_1} {thr_2} {thr_3} {thr_4} {self.led};'.encode('utf-8')
+            thr_1 = int(self.thrusters[self.thrusters_num["back_left"]["thruster_number"]]) * self.invert_k(self.thrusters_num["back_left"]["k_forward"], self.CONFIG_DATA["back_left"]["k_forward"])
+            thr_2 = int(self.thrusters[self.thrusters_num["back_right"]["thruster_number"]]) * self.invert_k(self.thrusters_num["back_right"]["k_forward"], self.CONFIG_DATA["back_right"]["k_forward"]) 
+            thr_3 = int(self.thrusters[self.thrusters_num["front_vertical"]["thruster_number"]]) * self.invert_k(self.thrusters_num["front_vertical"]["k_forward"], self.CONFIG_DATA["front_vertical"]["k_forward"]) 
+            thr_4 = int(self.thrusters[self.thrusters_num["front_horizontal"]["thruster_number"]]) * self.invert_k(self.thrusters_num["front_horizontal"]["k_forward"], self.CONFIG_DATA["front_horizontal"]["k_forward"]) 
+            thr_5 = int(self.thrusters[self.thrusters_num["back_vertical"]["thruster_number"]]) * self.invert_k(self.thrusters_num["back_vertical"]["k_forward"], self.CONFIG_DATA["back_vertical"]["k_forward"]) 
+            thr_6 = int(self.thrusters[self.thrusters_num["back_horizontal"]["thruster_number"]]) * self.invert_k(self.thrusters_num["back_horizontal"]["k_forward"], self.CONFIG_DATA["back_horizontal"]["k_forward"]) 
+
+
+            # thr_1 = int(self.thrusters[self.thrusters_num["back_left"]["thruster_number"]]) * self.invert_k(self.thrusters_num["back_left"]["k_forward"], self.CONFIG_DATA["back_left"]["k_forward"])
+            # thr_2 = int(self.thrusters[self.thrusters_num["back_right"]["thruster_number"]]) * self.invert_k(self.thrusters_num["back_right"]["k_forward"], self.CONFIG_DATA["back_right"]["k_forward"])
+            # thr_3 = int(self.thrusters[self.thrusters_num["front_vertical"]["thruster_number"]]) * self.invert_k(self.thrusters_num["front_vertical"]["k_forward"], self.CONFIG_DATA["front_vertical"]["k_forward"])
+            # thr_4 = int(self.thrusters[self.thrusters_num["front_horizontal"]["thruster_number"]]) * self.invert_k(self.thrusters_num["front_horizontal"]["k_forward"], self.CONFIG_DATA["front_horizontal"]["k_forward"])
+            # thr_5 = int(self.thrusters[self.thrusters_num["back_vertical"]["thruster_number"]]) * self.invert_k(self.thrusters_num["back_vertical"]["k_forward"], self.CONFIG_DATA["back_vertical"]["k_forward"])
+            # thr_6 = int(self.thrusters[self.thrusters_num["back_horizontal"]["thruster_number"]]) * self.invert_k(self.thrusters_num["back_horizontal"]["k_forward"], self.CONFIG_DATA["back_horizontal"]["k_forward"])
+            cmd = f'$3 {thr_1} {thr_2} {thr_3} {thr_4} {thr_5} {thr_6};'.encode('utf-8')
             #cmd = str('$3' + ' ' + str(self.thrusters[0]) + ' ' + str(self.thrusters[1]) + ' ' + str(self.thrusters[2]) + ' ' + str(self.thrusters[3]) + ' '  + str(self.led) + ' ' + ';').encode('utf-8')
             self.ser.write(cmd)
         except KeyError:

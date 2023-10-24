@@ -34,7 +34,7 @@ thrusters:
     - 0.0
     - 0.2
     - 0.0
-    thruster_number: 3
+    thruster_number: 0
   right:
     f:
     - 1.0
