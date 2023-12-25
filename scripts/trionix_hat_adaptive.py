@@ -22,6 +22,7 @@ class Board:
     depth = 0.0
     temp = 0.0
     thrusters = [0, 0, 0, 0]
+    thrusters_n = [0, 0, 0, 0]
     thrusters_num = {}
     thr_list = ""
 
@@ -124,12 +125,21 @@ class Board:
 
     def send_cmd(self, _):
         try:
-            thr_1 = int(self.thrusters[self.thrusters_num["front"]["thruster_number"]]) * self.invert_k(self.thrusters_num["front"]["k_forward"], self.CONFIG_DATA["front"]["k_forward"]) 
-            thr_2 = int(self.thrusters[self.thrusters_num["back"]["thruster_number"]]) * self.invert_k(self.thrusters_num["back"]["k_forward"], self.CONFIG_DATA["back"]["k_forward"]) 
-            thr_3 = int(self.thrusters[self.thrusters_num["left"]["thruster_number"]]) * self.invert_k(self.thrusters_num["left"]["k_forward"], self.CONFIG_DATA["left"]["k_forward"])
-            thr_4 = int(self.thrusters[self.thrusters_num["right"]["thruster_number"]]) * self.invert_k(self.thrusters_num["right"]["k_forward"], self.CONFIG_DATA["right"]["k_forward"] )
-            cmd = f'$3 {thr_1} {thr_2} {thr_3} {thr_4} {self.led};'.encode('utf-8')
+            # thr_1 = int(self.thrusters[self.thrusters_num["front"]["thruster_number"]]) * self.invert_k(self.thrusters_num["front"]["k_forward"], self.CONFIG_DATA["front"]["k_forward"]) 
+            # thr_2 = int(self.thrusters[self.thrusters_num["back"]["thruster_number"]]) * self.invert_k(self.thrusters_num["back"]["k_forward"], self.CONFIG_DATA["back"]["k_forward"]) 
+            # thr_3 = int(self.thrusters[self.thrusters_num["left"]["thruster_number"]]) * self.invert_k(self.thrusters_num["left"]["k_forward"], self.CONFIG_DATA["left"]["k_forward"])
+            # thr_4 = int(self.thrusters[self.thrusters_num["right"]["thruster_number"]]) * self.invert_k(self.thrusters_num["right"]["k_forward"], self.CONFIG_DATA["right"]["k_forward"] )
+            # cmd = f'$3 {thr_1} {thr_2} {thr_3} {thr_4} {self.led};'.encode('utf-8')
+            
             #cmd = str('$3' + ' ' + str(self.thrusters[0]) + ' ' + str(self.thrusters[1]) + ' ' + str(self.thrusters[2]) + ' ' + str(self.thrusters[3]) + ' '  + str(self.led) + ' ' + ';').encode('utf-8')
+            
+            self.thrusters_n[self.thrusters_num["front"]["thruster_number"]] = int(self.thrusters[3]) * self.invert_k(self.thrusters_num["front"]["k_forward"], self.CONFIG_DATA["front"]["k_forward"]) 
+            self.thrusters_n[self.thrusters_num["back"]["thruster_number"]] = int(self.thrusters[0]) * self.invert_k(self.thrusters_num["back"]["k_forward"], self.CONFIG_DATA["back"]["k_forward"]) 
+            self.thrusters_n[self.thrusters_num["left"]["thruster_number"]] = int(self.thrusters[2]) * self.invert_k(self.thrusters_num["left"]["k_forward"], self.CONFIG_DATA["left"]["k_forward"]) 
+            self.thrusters_n[self.thrusters_num["right"]["thruster_number"]] = int(self.thrusters[1]) * self.invert_k(self.thrusters_num["right"]["k_forward"], self.CONFIG_DATA["right"]["k_forward"]) 
+            
+
+            cmd = f'$3 {self.thrusters_n[0]} {self.thrusters_n[1]} {self.thrusters_n[2]} {self.thrusters_n[3]} {self.led};'.encode('utf-8')
             self.ser.write(cmd)
         except KeyError:
             pass
