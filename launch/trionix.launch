@@ -1,40 +1,35 @@
 <?xml version="1.0"?>
 <launch>
-	<machine name="trion" address="192.168.1.100" user="coder" timeout="10" password="coder" env-loader="~/trionix_ws/env.sh" />
+	<param name="mis_status" value='0' />
+	<!-- <machine name="trion" address="192.168.1.100" user="coder" timeout="10" password="coder" env-loader="~/trionix_ws/env.sh" /> -->
 
-	<node machine="trion" pkg="trionix_new" type="trionix_hat.py" name="hat" respawn="true" output="screen">
+	<!-- <node  pkg="trionix_new" type="trionix_hat.py" name="hat" respawn="true" output="screen">
   	   <remap from="/thrusters_3" to="/thrusters/front"/>
  	   <remap from="/thrusters_1" to="/thrusters/right"/>
  	   <remap from="/thrusters_2" to="/thrusters/left"/>
  	   <remap from="/thrusters_0" to="/thrusters/back"/>
- 	</node>
+ 	</node> -->
 	
-	<node machine="trion" pkg="ocam_driver" type="ocam_driver_node" name="camera" output="screen">
+	<node  pkg="ocam_driver" type="ocam_driver_node" name="camera" output="screen">
            <param name="device"  value="/dev/video1"/>
     	   <param name="trigger" value="false"/>
  	   <param name="format" value="Motion-JPEG 640 x 360 25 fps"/>
   	</node>
 
 	
-	<node machine="trion" name="thrusters_controller" pkg="thrusters_controllers" type="thrusters_controller_node" output="screen" respawn="true">
+	<node  name="thrusters_controllerr" pkg="thrusters_controllers" type="thrusters_controller_node" output="screen" respawn="true">
     		<rosparam command="load" file="$(find trionix)/config/thrusters.yaml" />
   	</node>
 
 	<!-- <node name="joy" pkg="joy" type = "joy_node"/> -->
 
-	<node machine="trion" name="pid" pkg="pid_regulator" type="trionix_pid_dynamic.py" output="screen">
+	<node  name="pid" pkg="pid_regulator" type="trionix_pid_dynamic.py" output="screen">
         <rosparam command="load" file="$(find trionix_new)/config/pid.yaml" />
 	</node>
          
-	<include file="~trionix_ws/src/trionix_web/launch/web_joy.launch" />
+	<!-- <include file="~trionix_ws/src/trionix_web/launch/web_joy.launch" /> -->
+	<include file="trionix/src/trionix_web/launch/web_joy.launch" />
 	
-	<node machine="trion" name="teleop" pkg="smtusdb_teleop_tools" type = "trionix_joy_teleop.py" output="screen" /> 
-	
-	<node name = "my_rqt_dashboard"
-	 	pkg = "rqt_gui" 
-	 	type = "rqt_gui" 
-	 	respawn = "false" 
-	 	output = "screen" 
-	 	args = "--perspective-file $(find trionix)/perspective/robotTest.perspective"/> 
+	<node  name="teleop" pkg="smtusdb_teleop_tools" type = "trionix_joy_teleop.py" output="screen" /> 
 
 </launch> 

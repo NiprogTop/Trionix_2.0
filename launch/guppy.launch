@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
 <launch>
     <arg name="control_type" default="web" />
-        <!-- <node pkg="trionix_new" type="guppy_hat.py" name="hat" respawn="true" output="screen">
+        <node pkg="trionix_new" type="guppy_hat.py" name="hat" respawn="true" output="screen">
            <remap from="/thrusters_3" to="/thrusters/back_right"/>
            <remap from="/thrusters_1" to="/thrusters/front_horizontal"/>
            <remap from="/thrusters_2" to="/thrusters/front_vertical"/>
            <remap from="/thrusters_0" to="/thrusters/back_left"/>
            <remap from="/thrusters_5" to="/thrusters/back_horizontal"/>
            <remap from="/thrusters_4" to="/thrusters/back_vertical"/>
-        </node> -->
+        </node>
         
 
         <node pkg="ocam_driver" type="ocam_driver_node" name="camera" output="screen">

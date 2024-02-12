@@ -24,7 +24,10 @@ FILE_NAME = "/mision2.json"
 class Controller:
     enabled_ = False
     depth_ = 0.0
+    heading_ = 0.0
+    start_heading_ = 0
     depth_eps_ = 0.1
+    heading_eps_ = 2.5
     surge_effort = 0.0
     mission_publisher_ = rospy.Publisher('mission_data', String, queue_size=1)
 
@@ -32,6 +35,7 @@ class Controller:
         self.rate = rospy.Rate(10)
 
         rospy.Subscriber('depth', Float64, self.depth_callback)
+        rospy.Subscriber('heading', Float64, self.heading_callback)
         rospy.Subscriber('sm_msg', String, self.msg_save)
         rospy.Subscriber('sm_msg_signal', Int16, self.msg_signal)
         self.start_service_ = rospy.Service('~start', Empty, self.handle_start)
@@ -42,6 +46,7 @@ class Controller:
 
         self.command_publisher_ = rospy.Publisher('teleop_command', Twist, queue_size=1)
         self.depth_sp_publisher = rospy.Publisher('pid/depth_pid/setpoint', Float64, queue_size=1)
+        self.heading_sp_publisher = rospy.Publisher('pid/heading_pid/setpoint', Float64, queue_size=1)
         
 
         self.state_change_time = rospy.Time.now()
@@ -76,6 +81,14 @@ class Controller:
     def depth_callback(self, msg):
         self.depth_ = msg.data
 
+    
+    def heading_callback(self, msg):
+        self.heading_ = msg.data
+
+
+    def heading_on_start(self):
+        self.start_heading_ = self.heading_
+
 
     def move(self, x, y, z):
         cmd = Twist()
@@ -85,7 +98,22 @@ class Controller:
         self.command_publisher_.publish(cmd)
 
 
-    def turn(self, y, z):
+    def turn_angle(self, heading):
+        self.heading_sp_publisher.publish(heading + self.start_heading_)
+
+    
+    def turn_approached(self, ang):
+        ang_end = (self.start_heading_ + ang) % 360
+        # if ((self.heading_ - self.heading_eps_) % 360 < ang_end < (self.heading_ + self.heading_eps_) % 360):
+        # if abs(ang - self.heading_) < self.heading_eps_:
+        if (int(self.heading_) == int(ang_end)):
+            return True
+        else:
+            # rospy.loginfo(int(self.heading_))
+            return False
+
+
+    def turn_time(self, y, z):
         cmd = Twist()
         cmd.angular.y = y
         cmd.angular.z = z
@@ -105,6 +133,7 @@ class Controller:
         # rospy.loginfo(dd)
         with open(MISSION_PATH + FILE_NAME, 'w') as outfile:
             json.dump(dd, outfile)
+            rospy.loginfo("Mission saved!")
         # self.mission_pub()
 
     
@@ -197,7 +226,7 @@ class Move(smach.State):
                 self.cntr.rate.sleep()
 
 
-class Turning(smach.State):
+class Turning_by_time(smach.State):
     def __init__(self, c, effort_y, effort_z, time):
         smach.State.__init__(self, outcomes=['out_1'])
         self.cntr = c
@@ -215,6 +244,27 @@ class Turning(smach.State):
                 return 'out_1'
             else:
                 self.cntr.turn(self.effort_y, self.effort_z)
+                self.cntr.rate.sleep()
+
+
+class Turning(smach.State):
+    def __init__(self, c, angle):
+        smach.State.__init__(self, outcomes=['out_1'])
+        self.cntr = c
+        self.angle = angle
+
+
+    def execute(self, userdata):
+        self.cntr.state_change_time = rospy.Time.now()
+        self.cntr.switch_autopilot(True)
+        self.cntr.turn_angle(self.angle)
+
+        rospy.loginfo( "targ. angle: " + str((self.cntr.start_heading_ + self.angle) % 360))
+
+        while not rospy.is_shutdown():
+            if self.cntr.turn_approached(self.angle):
+                return 'out_1'
+            else:
                 self.cntr.rate.sleep()
 
             
@@ -246,7 +296,7 @@ class Mission_contriol:
 
     
     def file_parser(self):
-        os.chdir(self.PATH)
+        os.chdir(PATH)
         os.chdir(FILE_PATH)
         MISSION_PATH = os.getcwd()
         self.blocks_sequence = []
@@ -266,10 +316,11 @@ class Mission_contriol:
         if type == 'Submerge':
             return Submerge(c, depth=data['depth'])
         elif type == 'Turning':
-            return Turning(c, effort_y=data['axis_y'], effort_z=data['axis_z'], time=data['time'])
+            return Turning(c, angle=data['angle'])
+            # return Turning(c, effort_y=data['axis_y'], effort_z=data['axis_z'], time=data['time'])
         elif type == 'Move':
             return Move(c, effort_x=data['axis_x'], effort_y=data['axis_y'], effort_z=data['axis_z'], time=data['time'])
-        elif type == 'Waiting':
+        elif type == 'Waiting': 
             return Waiting(c, time=data['time'])
         elif type == 'Emerge':
             return Emerge(c)
@@ -277,12 +328,16 @@ class Mission_contriol:
 
     def generation(self):
         self.rewrite()
+        turn_on_start = 0
         self.mission_data = self.file_parser()
         ind_lead = lambda a, b: a if len(self.blocks_sequence) > a else b
 
         for index, block_name in enumerate(self.mission_data):
                 for block_type in self.mission_data[block_name].keys():
                     with self.sm:
+                        # if turn_on_start == 0:
+                        #     smach.StateMachine.add('T0', Turning(self.c, angle=0), transitions={'out_1': self.blocks_sequence[index]})
+                        #     turn_on_start == 1
                         rospy.loginfo(self.mission_data[block_name])
                         rospy.loginfo(ind_lead(1, None))
                         if (index) == len(self.blocks_sequence)-1:
@@ -302,6 +357,7 @@ class Mission_contriol:
         
 
     def start(self):
+        self.start_angle = self.c.heading_on_start() 
         rospy.loginfo(self.sm.get_initial_states())
         if self.sm.get_initial_states() == ['None']:
             rospy.loginfo(self.blocks_sequence[0])
@@ -325,11 +381,15 @@ if __name__ == '__main__':
                 mis.MISSION_STATUS = 2
                 rospy.set_param('mis_status', mis.MISSION_STATUS)
         if mis.c.enabled_:
+            rospy.loginfo(mis.MISSION_STATUS)
             if mis.MISSION_STATUS == 2:
                 rospy.loginfo("#### Start! ####")
-                mis.start()
+                mis.c.heading_sp_publisher.publish(mis.c.heading_)
                 mis.MISSION_STATUS = 0
                 rospy.set_param('mis_status', mis.MISSION_STATUS)
+                mis.start()
+                rospy.loginfo("Mission End!")
+                rospy.set_param('control_type', "web")
             else:
                 rospy.loginfo("#### Generation! ####")
                 mis.generation()

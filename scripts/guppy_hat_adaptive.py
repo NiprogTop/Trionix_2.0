@@ -14,7 +14,8 @@ class Board:
     # CONFIG_FILE_PATH = '/home/nick/trionix/src/trionix_new/config/thrusters2.yaml'
     CONFIG_FILE_PATH = '/home/coder/trionix_ws/src/trionix_new/config/guppy_thrusters.yaml'
     # SERIAL_PORT = "/dev/ttyUSB0"
-    SERIAL_PORT = '/dev/ttyS1'
+    # SERIAL_PORT = '/dev/ttyS5' # OrangePi_zero_2
+    SERIAL_PORT = '/dev/ttyS1'   # OrangePi_zero_1
 
     CONFIG_DATA = 0
 
@@ -31,6 +32,7 @@ class Board:
         self.ser = serial.Serial(self.SERIAL_PORT, 115200, timeout=0.03)
         self.depth_publisher_ = rospy.Publisher('/depth', Float64, queue_size=1)
         self.pitch_publisher_ = rospy.Publisher('/pitch', Float64, queue_size=1)
+        self.heading_publisher_ = rospy.Publisher('/heading', Float64, queue_size=1)
         self.thr_list_publisher_ = rospy.Publisher('/thrusters_list', String, queue_size=1)
 
         self.update_thrusters_config_data(1)
@@ -115,13 +117,18 @@ class Board:
 
     def read_data(self):
         resp = self.ser.readline()
+        # rospy.loginfo(resp.decode('UTF-8'))
         try:
             resp = resp.decode('UTF-8')
             data = resp[3:-2].split(' ')
-            p = data[1]
+            # p = float(data[0]) * -1 # New_guppy
+            p = data[1]   # Old_guppy
+            h = data[2]
             depth = data[3]
             self.pitch_publisher_.publish(float(p))
+            self.heading_publisher_.publish(float(h))
             self.depth_publisher_.publish(float(depth))
+            # rospy.loginfo(resp)
         except Exception:
             pass
     
