@@ -21,6 +21,7 @@ class Board:
     led = 0.0
     depth = 0.0
     temp = 0.0
+    manip = 0
     thrusters = [0, 0, 0, 0]
     thrusters_n = [0, 0, 0, 0]
     thrusters_num = {}
@@ -45,13 +46,14 @@ class Board:
         rospy.Subscriber('thrusters_save', String, self.save_thrusters_config_data)
         
         rospy.Subscriber('light', Float64, self.led_callback)
+        rospy.Subscriber('manipulator', Float64, self.manip_callback)
         # print('Get current working directory : ', os.getcwd())
 
         rospy.loginfo('Cpu Board started')
         
 
     def __del__(self):
-        self.ser.write('$3 0 0 0 0 0;'.encode('utf_8'))
+        self.ser.write('$3 0 0 0 0 0 0;'.encode('utf_8'))
         if self.ser:
             self.ser.close()
 
@@ -139,7 +141,7 @@ class Board:
             self.thrusters_n[self.thrusters_num["right"]["thruster_number"]] = int(self.thrusters[1]) * self.invert_k(self.thrusters_num["right"]["k_forward"], self.CONFIG_DATA["right"]["k_forward"]) 
             
 
-            cmd = f'$3 {self.thrusters_n[0]} {self.thrusters_n[1]} {self.thrusters_n[2]} {self.thrusters_n[3]} {self.led};'.encode('utf-8')
+            cmd = f'$3 {self.thrusters_n[0]} {self.thrusters_n[1]} {self.thrusters_n[2]} {self.thrusters_n[3]} {self.led} {self.manip};'.encode('utf-8')
             self.ser.write(cmd)
         except KeyError:
             pass
@@ -153,6 +155,9 @@ class Board:
         # self.led = int(min(max(msg.data * 255, 0), 255))
         self.led = int(msg.data)
 
+    
+    def manip_callback(self, msg):
+        self.manip = int(msg.data)
 
 
 if __name__ == '__main__':

@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<launch>
+<param name="format" value="Motion-JPEG 1280 x 720 30 fps"/>
+	<node pkg="trionix_new" type="trionix_hat_adaptive.py" name="hat" respawn="true" output="screen">
+  	   <remap from="/thrusters_3" to="/thrusters/front"/>
+ 	   <remap from="/thrusters_1" to="/thrusters/right"/>
+ 	   <remap from="/thrusters_2" to="/thrusters/left"/>
+ 	   <remap from="/thrusters_0" to="/thrusters/back"/>
+ 	</node>
+	
+	<node pkg="ocam_driver" type="ocam_driver_node" name="camera" output="screen">
+			<!-- <param name="device"  value="/dev/video1"/> -->
+    	   <param name="trigger" value="false"/>
+ 	   <param name="format" value="Motion-JPEG 1280 x 720 30 fps"/>
+  	</node>
+
+	
+	<node name="thrusters_controller" pkg="thrusters_controllers" type="thrusters_controller_node" output="screen" respawn="true">
+    		<rosparam command="load" file="$(find trionix_new)/config/thrusters.yaml" />
+  	</node>
+
+	<node name="pid" pkg="pid_regulator" type="trionix_pid_dynamic.py" output="screen">
+        	<rosparam command="load" file="$(find trionix_new)/config/pid.yaml" />
+	</node>
+
+	<include file="$(find trionix_web)/launch/web_joy.launch" />
+
+	<include file="$(find trionix_new)/launch/cam_cmd.launch" />
+
+	<node name="teleop" pkg="smtusdb_teleop_tools" type = "trionix_joy_teleop.py" output="screen" /> 
+	 
+</launch> 

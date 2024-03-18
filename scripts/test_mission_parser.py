@@ -99,7 +99,10 @@ class Controller:
 
 
     def turn_angle(self, heading):
-        self.heading_sp_publisher.publish(heading + self.start_heading_)
+        h = heading + self.start_heading_
+        if (h < 0):
+            h = 360 + h
+        self.heading_sp_publisher.publish(h)
 
     
     def turn_approached(self, ang):

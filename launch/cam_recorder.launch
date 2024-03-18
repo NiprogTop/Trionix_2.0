@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+    <node pkg="ocam_driver" type="ocam_driver_node" name="camera" output="screen">
+        <!-- <param name="device"  value="/dev/video1"/> -->
+        <!-- <param name="trigger" value="false"/> -->
+        <!-- <param name="format" value="Motion-JPEG 1280 x 720 30 fps"/> -->
+    </node>
+    
+    <node pkg="trionix_new" type="cam_control.py" name="cam_recorder" respawn="true" output="screen">
+        <!-- <param name="resolution_h" value="1080"/>
+        <param name="resolution_w" value="1920"/>
+        <param name="fps" value="30"/> -->
+    </node>
+
+</launch>

@@ -11,9 +11,9 @@
  	</node> -->
 	
 	<node  pkg="ocam_driver" type="ocam_driver_node" name="camera" output="screen">
-           <param name="device"  value="/dev/video1"/>
-    	   <param name="trigger" value="false"/>
- 	   <param name="format" value="Motion-JPEG 640 x 360 25 fps"/>
+        	<!-- <param name="device"  value="/dev/video1"/> -->
+    		<!-- <param name="trigger" value="false"/> -->
+ 	   		<param name="format" value="Motion-JPEG 1280 x 720 25 fps"/>
   	</node>
 
 	
@@ -23,13 +23,15 @@
 
 	<!-- <node name="joy" pkg="joy" type = "joy_node"/> -->
 
-	<node  name="pid" pkg="pid_regulator" type="trionix_pid_dynamic.py" output="screen">
+	<!-- <node  name="pid" pkg="pid_regulator" type="trionix_pid_dynamic.py" output="screen">
         <rosparam command="load" file="$(find trionix_new)/config/pid.yaml" />
-	</node>
+	</node> -->
          
 	<!-- <include file="~trionix_ws/src/trionix_web/launch/web_joy.launch" /> -->
 	<include file="trionix/src/trionix_web/launch/web_joy.launch" />
 	
-	<node  name="teleop" pkg="smtusdb_teleop_tools" type = "trionix_joy_teleop.py" output="screen" /> 
+	<!-- <node  name="teleop" pkg="smtusdb_teleop_tools" type = "trionix_joy_teleop.py" output="screen" />  -->
+
+	<node pkg="trionix_new" type="cam_control.py" name="cam_recorder" respawn="true" output="screen" />
 
 </launch> 
