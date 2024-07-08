@@ -8,29 +8,44 @@ from cv_bridge import CvBridge, CvBridgeError
 import numpy as np
 from datetime import datetime as dt
 import os
+import subprocess
+import signal
 
 class ImageWriter:
     def __init__(self):
         self.cv_bridge = CvBridge()
-        rospy.Subscriber("/image_raw/compressed", CompressedImage, self.cam_cal)
-        rospy.Subscriber("/cam_writer_command", Int16, self.cam_comm)
+        # rospy.Subscriber("/image_raw/compressed", CompressedImage, self.cam_cal)
+        rospy.Subscriber("/cam_writer_command", Int16, self.cam_cmd)
         rospy.set_param("video_status", 0)
         rec_param = rospy.get_param("format")
         rospy.loginfo(rec_param)
         rec_param = rec_param.split(" ")
 
         ##### Video file param ######
-        self.fourcc = cv2.VideoWriter_fourcc(*"MJPG")
-        self.fps = int(rec_param[4])
-        self.resolution = (int(rec_param[1]),int(rec_param[3]))
+        self.vidcap = cv2.VideoCapture('http://192.168.1.100:8090/?action=stream')
+        self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        self.file_out = None
+
+        self.file_counter = 1
+        self.frame_counter = 0
+        self.frame_rate = int(self.vidcap.get(cv2.CAP_PROP_FPS))
+        self.minuts = 3
+        
+        # self.resolution = (int(rec_param[1]),int(rec_param[3]))
         self.video_path = "/video/"
         self.photo_path = "/photo/"
         self.frame_num = 0
         self.cam_comm_data = 0
 
+        self.ffmpeg_process = None
+        
+        self.seconds_per_file = self.frame_rate * self.minuts * 60 # 5 minutes 30 fps
+
         self.video_writer_status = 0
 
-        self.filename = " "
+        rospy.loginfo("FPS: " + str(self.frame_rate))
+        self.loop()
+
         # dd = self.dt_get()
 
         # print(str(dt.now().strftime("%d%m%Y_%H%M%S")) + ".avi")
@@ -39,19 +54,118 @@ class ImageWriter:
         # self.video_writer = cv2.VideoWriter(self.video_name_get(), self.fourcc, self.fps, self.resolution)
 
     def __del__(self):
+        self.vidcap.release()
         if self.video_writer_status > 0:
             rospy.set_param("video_status", 0)
-            self.video_writer.release()
+            # self.video_writer.release()
+        if self.file_out is not None:
+            self.file_out.release()
+        cv2.destroyAllWindows()
+
+    def cam_cmd(self, msg):
+        self.cam_comm_data = msg.data
+        # rospy.loginfo(self.cam_comm_data)
+
+
+    def loop(self):        
+        while not rospy.is_shutdown():
+            if self.video_writer_status > 0 or self.cam_comm_data == 5 or self.cam_comm_data == 1:
+                wait_mil_sec = 25
+                i = 0
+                while i <= wait_mil_sec:
+                    if self.cam_comm_data == 5: # check photo cmd
+                        ret, self.frame = self.vidcap.read()
+                        if not ret:
+                            break                    
+                        self.show_image(self.frame)
+                        self.photo_writer(self.frame)
+                        self.cam_comm_data = 0
+
+                    if self.cam_comm_data == 1 or self.video_writer_status == 1: # video writing
+                        ret, self.frame = self.vidcap.read()
+                        if not ret:
+                            break                     
+                        self.video_write_url(self.frame)
+                        self.cam_comm_data == 0
+
+                    if self.cam_comm_data == 3: # end recording
+                        if self.video_writer_status > 0:
+                            self.file_out.release()
+                            self.frame_counter = 0
+                        self.cam_comm_data, self.video_writer_status = 0, 0
+                        rospy.loginfo("-- End file writing! --")
+                        rospy.set_param("video_status", 0)
+                
 
 
     def show_image(self, img, title='Camera'):
         cv2.imshow(title, img)
-        cv2.waitKey(3) 
+        cv2.waitKey(3)
+
+
+    def video_write_url(self, frame):
+        if self.video_writer_status == 0 or self.frame_counter == self.seconds_per_file:
+            if self.file_out is not None:   
+                self.file_out.release()        
+            rospy.loginfo("-- File created --")
+            self.file_out = cv2.VideoWriter(self.video_name_get(), self.fourcc, self.frame_rate, (self.frame.shape[1], self.frame.shape[0]))
+            self.video_writer_status = 1
+            rospy.set_param("video_status", 1)
+            self.frame_counter = 0
+
+        self.file_out.write(frame)
+        self.frame_counter += 1
+        rospy.loginfo(self.seconds_per_file - self.frame_counter)
 
 
     def video_name_get(self):
-        name = os.path.expanduser('~') + self.video_path + str(dt.now().strftime("%d%m%Y_%H%M%S")) + ".avi"
+        timestamp = dt.now().strftime("%Y%m%d_%H%M%S")
+        name = os.path.expanduser('~') + self.video_path + timestamp + ".mp4"
         return(name)
+
+
+    def start_recording(self, output_dir, input_url):
+
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        # timestamp = dt.now().strftime("%Y%m%d_%H%M%S")
+        # output_path = os.path.expanduser('~') + self.video_path + timestamp + ".mp4"
+        # output_path = os.path.join(output_dir, f"trionix_{timestamp}_%03d.mp4")
+        output_path = self.video_name_get()
+        
+
+        ffmpeg_command = [
+            'ffmpeg',
+            '-i', input_url,
+            # '-r', '15',
+            '-codec:v', 'libx264',
+            '-codec:v', 'copy',
+            '-threads', '0',
+            '-crf', '38',
+            '-x264-params', 'opencl=true',
+            '-preset', 'medium',
+            # '-pix_fmt', 'yuv420p',
+            '-segment_time', '20',
+            '-f', 'segment',
+            '-reset_timestamps', '1',
+            '-movflags', '+faststart',
+            output_path
+        ]
+
+        self.ffmpeg_process = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        print("Recording started.")
+
+
+    def stop_recording(self):
+        if self.ffmpeg_process is not None:
+            self.ffmpeg_process.send_signal(signal.SIGTERM)
+            self.ffmpeg_process.wait()  # Подождите завершения процесса
+            self.ffmpeg_process = None
+            print("Recording stopped.")
+        else:
+            print("No recording process found.")
 
 
     def photo_name_get(self):
@@ -66,45 +180,9 @@ class ImageWriter:
         self.cam_comm_data = msg.data
         if msg.data == 2:
             rospy.set_param("video_status", 2)
+        if msg.data == 5:
+            self.photo_writer(self.vidcap)
         # rospy.loginfo(msg.data)
-
-
-
-    def cam_cal(self, msg):
-        if self.video_writer_status > 0 or self.cam_comm_data == 5 or self.cam_comm_data == 1:
-            # if self.cam_comm_data != 2:
-            try:
-                cv_image = self.convert_ros_compressed_to_cv2(msg)
-            except CvBridgeError as e:
-                rospy.logerr("CvBridge Error: {0}".format(e))
-
-            if self.cam_comm_data == 5: # photo
-                # rospy.loginfo("photo: ")
-                self.photo_writer(cv_image)
-                self.cam_comm_data = 0
-
-            if self.cam_comm_data == 1 or self.video_writer_status == 1:
-                if self.cam_comm_data != 2:
-                    self.video_write(cv_image)
-                    # rospy.loginfo("go -")
-                # self.video_writer.release()
-                # rospy.loginfo("pause")
-            
-            if self.cam_comm_data == 3: # end recording
-                if self.video_writer_status > 0:
-                    self.video_writer.release()
-                self.cam_comm_data, self.video_writer_status = 0, 0
-                rospy.set_param("video_status", 0)
-
-        ######### Writing video ########
-        # self.video_writer.write(cv_image)
-        # self.video_write(cv_image)
-
-        ######### Writing img #########
-        # filename = 'savedImage.jpg'
-        # cv2.imwrite(filename, cv_image)
-        # self.photo_writer(cv_image)
-
 
 
     def video_write(self, frame):
@@ -119,9 +197,10 @@ class ImageWriter:
 
 
     def photo_writer(self, img):
-        # if self.frame_num % self.fps == 0:
         filename = self.photo_name_get()
         # rospy.loginfo(filename)
+        # image = cv2.rotate(img, cv2.ROTATE_180)
+        # img = image        
         cv2.imwrite(filename, img)
         os.chmod(filename, 0o666)
 
@@ -133,4 +212,4 @@ class ImageWriter:
 if __name__ == '__main__':
     rospy.init_node('cam_record_')
     image_writer = ImageWriter()
-    image_writer.run()
+    # image_writer.run()

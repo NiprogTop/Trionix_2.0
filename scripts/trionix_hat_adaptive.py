@@ -32,6 +32,7 @@ class Board:
         self.ser = serial.Serial(self.SERIAL_PORT, 115200, timeout=0.03)
         self.depth_publisher_ = rospy.Publisher('/depth', Float64, queue_size=1)
         self.pitch_publisher_ = rospy.Publisher('/pitch', Float64, queue_size=1)
+        self.heading_publisher_ = rospy.Publisher('/heading', Float64, queue_size=1)
         self.thr_list_publisher_ = rospy.Publisher('/thrusters_list', String, queue_size=1)
 
         self.update_thrusters_config_data(1)
@@ -118,6 +119,8 @@ class Board:
             resp = resp.decode('UTF-8')
             data = resp[3:-2].split(' ')
             p = data[1]
+            h = data[2]
+            self.heading_publisher_.publish(float(h) % 360)
             depth = data[3]
             self.pitch_publisher_.publish(float(p))
             self.depth_publisher_.publish(float(depth))
@@ -143,12 +146,13 @@ class Board:
 
             cmd = f'$3 {self.thrusters_n[0]} {self.thrusters_n[1]} {self.thrusters_n[2]} {self.thrusters_n[3]} {self.led} {self.manip};'.encode('utf-8')
             self.ser.write(cmd)
+            rospy.loginfo(cmd)
         except KeyError:
             pass
 
 
     def thrusters_callback(self, msg, i):
-        self.thrusters[i] = int(min(max(msg.data * 100, -100), 100))
+        self.thrusters[i] = int(min(max(msg.data * 100, -100), 100)) * 2
 
 
     def led_callback(self, msg):
