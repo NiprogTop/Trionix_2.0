@@ -76,6 +76,13 @@ class Controller:
             return True
         else:
             return False
+        
+    
+    def depth_emerge(self):
+        if abs(0 - self.depth_) < self.depth_eps_:
+            return True
+        else:
+            return False
 
 
     def depth_callback(self, msg):
@@ -99,9 +106,10 @@ class Controller:
 
 
     def turn_angle(self, heading):
-        h = heading + self.start_heading_
-        if (h < 0):
-            h = 360 + h
+        # h = heading + self.start_heading_
+        # if (h < 0):
+        #     h = 360 + h
+        h = heading % 360
         self.heading_sp_publisher.publish(h)
 
     
@@ -268,6 +276,7 @@ class Turning(smach.State):
             if self.cntr.turn_approached(self.angle):
                 return 'out_1'
             else:
+                return 'out_1'
                 self.cntr.rate.sleep()
 
             

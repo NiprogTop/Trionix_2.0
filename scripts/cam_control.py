@@ -23,9 +23,10 @@ class ImageWriter:
 
         ##### Video file param ######
         self.vidcap = cv2.VideoCapture('http://192.168.1.100:8090/?action=stream')
-        self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        # self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
         self.file_out = None
 
+        # self.frame = ''
         self.file_counter = 1
         self.frame_counter = 0
         self.frame_rate = int(self.vidcap.get(cv2.CAP_PROP_FPS))
@@ -39,7 +40,7 @@ class ImageWriter:
 
         self.ffmpeg_process = None
         
-        self.seconds_per_file = self.frame_rate * self.minuts * 60 # 5 minutes 30 fps
+        # self.seconds_per_file = self.frame_rate * self.minuts * 60 # 5 minutes 30 fps
 
         self.video_writer_status = 0
 
@@ -69,33 +70,37 @@ class ImageWriter:
 
     def loop(self):        
         while not rospy.is_shutdown():
-            if self.video_writer_status > 0 or self.cam_comm_data == 5 or self.cam_comm_data == 1:
-                wait_mil_sec = 25
-                i = 0
-                while i <= wait_mil_sec:
-                    if self.cam_comm_data == 5: # check photo cmd
-                        ret, self.frame = self.vidcap.read()
-                        if not ret:
-                            break                    
-                        self.show_image(self.frame)
-                        self.photo_writer(self.frame)
-                        self.cam_comm_data = 0
+            # if self.video_writer_status > 0 or self.cam_comm_data == 5 or self.cam_comm_data == 1:
+                # wait_mil_sec = 25
+                # i = 0
+                # while i <= wait_mil_sec:
+            if self.cam_comm_data == 5: # check photo cmd
+                self.vidcap = None
+                self.vidcap = cv2.VideoCapture('http://192.168.1.100:8090/?action=stream')
+                ret, frame = self.vidcap.read()
+                if not ret:
+                    rospy.loginfo("Failed to grab frame!")
+                    break                    
+                # self.show_image(self.frame)
 
-                    if self.cam_comm_data == 1 or self.video_writer_status == 1: # video writing
-                        ret, self.frame = self.vidcap.read()
-                        if not ret:
-                            break                     
-                        self.video_write_url(self.frame)
-                        self.cam_comm_data == 0
+                self.photo_writer(frame)
+                self.cam_comm_data = 0
 
-                    if self.cam_comm_data == 3: # end recording
-                        if self.video_writer_status > 0:
-                            self.file_out.release()
-                            self.frame_counter = 0
-                        self.cam_comm_data, self.video_writer_status = 0, 0
-                        rospy.loginfo("-- End file writing! --")
-                        rospy.set_param("video_status", 0)
-                
+                # if self.cam_comm_data == 1 or self.video_writer_status == 1: # video writing
+                #     ret, self.frame = self.vidcap.read()
+                #     if not ret:
+                #         break                     
+                #     self.video_write_url(self.frame)
+                #     self.cam_comm_data == 0
+
+                # if self.cam_comm_data == 3: # end recording
+                #     if self.video_writer_status > 0:
+                #         self.file_out.release()
+                #         self.frame_counter = 0
+                #     self.cam_comm_data, self.video_writer_status = 0, 0
+                #     rospy.loginfo("-- End file writing! --")
+                #     rospy.set_param("video_status", 0)
+            
 
 
     def show_image(self, img, title='Camera'):
@@ -198,10 +203,11 @@ class ImageWriter:
 
     def photo_writer(self, img):
         filename = self.photo_name_get()
-        # rospy.loginfo(filename)
+        rospy.loginfo(filename)
         # image = cv2.rotate(img, cv2.ROTATE_180)
-        # img = image        
+        # img = image
         cv2.imwrite(filename, img)
+        # rospy.loginfo("###   Image ready!   ###")
         os.chmod(filename, 0o666)
 
 

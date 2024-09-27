@@ -54,7 +54,7 @@ class Board:
         
 
     def __del__(self):
-        self.ser.write('$3 0 0 0 0 0 0;'.encode('utf_8'))
+        self.ser.write('$3 0 0 0 0 0;'.encode('utf_8'))
         if self.ser:
             self.ser.close()
 
@@ -146,13 +146,15 @@ class Board:
 
             cmd = f'$3 {self.thrusters_n[0]} {self.thrusters_n[1]} {self.thrusters_n[2]} {self.thrusters_n[3]} {self.led} {self.manip};'.encode('utf-8')
             self.ser.write(cmd)
-            rospy.loginfo(cmd)
+            # rospy.loginfo(cmd)
         except KeyError:
             pass
 
 
     def thrusters_callback(self, msg, i):
-        self.thrusters[i] = int(min(max(msg.data * 100, -100), 100)) * 2
+        self.thrusters[i] = int(min(max(msg.data * 100, -100), 100)) * 1.2
+        # if i == 2:
+        #     rospy.loginfo(self.thrusters[2])
 
 
     def led_callback(self, msg):
