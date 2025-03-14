@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<launch>
+<!-- <param name="format" value="Motion-JPEG 1280 x 720 30 fps"/> -->
+	<node pkg="trionix_new" type="robobag_hat.py" name="hat" respawn="true" output="screen">
+ 	   <remap from="/thrusters_0" to="/thrusters/right"/>
+ 	   <remap from="/thrusters_1" to="/thrusters/left"/>
+ 	</node>
+	
+	<node name="thrusters_controller" pkg="thrusters_controllers" type="thrusters_controller_node" output="screen" respawn="true">
+    		<rosparam command="load" file="$(find trionix_new)/config/thrusters_bag.yaml" />
+  	</node>
+
+	<node name="pid" pkg="pid_regulator" type="trionix_pid_dynamic.py" output="screen">
+        	<rosparam command="load" file="$(find trionix_new)/config/pid.yaml" />
+	</node>
+
+	<include file="$(find trionix_web)/launch/web_joy.launch" />
+
+	<node name="teleop" pkg="smtusdb_teleop_tools" type = "trionix_joy_teleop.py" output="screen" /> 
+	 
+</launch> 

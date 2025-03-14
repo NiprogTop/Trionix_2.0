@@ -143,12 +143,6 @@ class Board:
             self.thrusters_n[self.thrusters_num["back_horizontal"]["thruster_number"]] = int(self.thrusters[5]) * self.invert_k(self.thrusters_num["back_horizontal"]["k_forward"], self.CONFIG_DATA["back_horizontal"]["k_forward"]) 
 
 
-            # thr_1 = int(self.thrusters[self.thrusters_num["back_left"]["thruster_number"]]) * self.invert_k(self.thrusters_num["back_left"]["k_forward"], self.CONFIG_DATA["back_left"]["k_forward"])
-            # thr_2 = int(self.thrusters[self.thrusters_num["back_right"]["thruster_number"]]) * self.invert_k(self.thrusters_num["back_right"]["k_forward"], self.CONFIG_DATA["back_right"]["k_forward"])
-            # thr_3 = int(self.thrusters[self.thrusters_num["front_vertical"]["thruster_number"]]) * self.invert_k(self.thrusters_num["front_vertical"]["k_forward"], self.CONFIG_DATA["front_vertical"]["k_forward"])
-            # thr_4 = int(self.thrusters[self.thrusters_num["front_horizontal"]["thruster_number"]]) * self.invert_k(self.thrusters_num["front_horizontal"]["k_forward"], self.CONFIG_DATA["front_horizontal"]["k_forward"])
-            # thr_5 = int(self.thrusters[self.thrusters_num["back_vertical"]["thruster_number"]]) * self.invert_k(self.thrusters_num["back_vertical"]["k_forward"], self.CONFIG_DATA["back_vertical"]["k_forward"])
-            # thr_6 = int(self.thrusters[self.thrusters_num["back_horizontal"]["thruster_number"]]) * self.invert_k(self.thrusters_num["back_horizontal"]["k_forward"], self.CONFIG_DATA["back_horizontal"]["k_forward"])
             cmd = f'$3 {self.thrusters_n[0]} {self.thrusters_n[1]} {self.thrusters_n[2]} {self.thrusters_n[3]} {self.thrusters_n[4]} {self.thrusters_n[5]};'.encode('utf-8')
             # cmd = f'$3 {self.thrusters_n[0]} {self.thrusters_n[1]} {self.thrusters_n[2]} {self.thrusters_n[3]} {self.thrusters_n[4]};'.encode('utf-8')
             #cmd = str('$3' + ' ' + str(self.thrusters[0]) + ' ' + str(self.thrusters[1]) + ' ' + str(self.thrusters[2]) + ' ' + str(self.thrusters[3]) + ' '  + str(self.led) + ' ' + ';').encode('utf-8')

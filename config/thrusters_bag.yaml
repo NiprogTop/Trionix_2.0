@@ -1,0 +1,25 @@
+thrusters:
+  left:
+    f:
+    - 1.0
+    - 0.0
+    - 0.0
+    k_backward: -1.0
+    k_forward: -1.0
+    r:
+    - 0.0
+    - 0.2
+    - 0.0
+    thruster_number: 0
+  right:
+    f:
+    - 1.0
+    - 0.0
+    - 0.0
+    k_backward: -1.0
+    k_forward: -1.0
+    r:
+    - 0.0
+    - -0.2
+    - 0.0
+    thruster_number: 1
